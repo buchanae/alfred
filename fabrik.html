@@ -115,48 +115,56 @@
       c.attr({'fill': 'red'});
 
 
-      var tolerance = 1;
+      function solve(arm, target) {
+          var tolerance = 1;
 
-      // TODO clean this up
-      if (arm.reachable(target)) {
-          var b = arm.root;
-          var count = 0;
-          var thresh = 100;
+          // TODO clean this up
+          if (arm.reachable(target)) {
+              var b = arm.root;
+              var count = 0;
+              var thresh = 100;
 
-          while ( (arm.end.distance_to(target) > tolerance) && (count < thresh) ) {
-              var prev = arm.end;
-              arm.end = target;
-              for (var i = arm.points.length - 2; i >= 0; i--) {
-                  var p = arm.points[i];
-                  var q = arm.points[i + 1];
-                  var x = Math.abs(q.x - p.x);
-                  var y = Math.abs(q.y - p.y);
-                  var z = p.distance_to(q);
-                  var d = p.distance_to(prev);
-                  prev = p;
-                  var c = z - d;
-                  arm.points[i] = new Point(p.x + (c / z * y), p.y + (c / z * x));
+              while ( (arm.end.distance_to(target) > tolerance) && (count < thresh) ) {
+                  var prev = arm.end;
+                  arm.end = target;
+                  for (var i = arm.points.length - 2; i >= 0; i--) {
+                      var p = arm.points[i];
+                      var q = arm.points[i + 1];
+                      var x = p.x - q.x;
+                      var y = p.y - q.y;
+                      var z = p.distance_to(q);
+                      var d = p.distance_to(prev);
+                      prev = p;
+                      var c = z - d;
+                      arm.points[i] = new Point(p.x + (c / z * y), p.y + (c / z * x));
+                  }
+
+                  arm.root = b;
+                  prev = arm.root;
+                  for (var i = 1; i < arm.points.length - 1; i++) {
+                      var p = arm.points[i];
+                      var q = arm.points[i - 1];
+                      var x = p.x - q.x;
+                      var y = p.y - q.y;
+                      var z = p.distance_to(q);
+                      var d = p.distance_to(prev);
+                      prev = p;
+                      var c = z - d;
+                      arm.points[i] = new Point(p.x + (c / z * y), p.y + (c / z * x));
+                  }
+                  count++;
               }
-
-              arm.root = b;
-              prev = arm.root;
-              for (var i = 1; i < arm.points.length - 1; i++) {
-                  var p = arm.points[i];
-                  var q = arm.points[i + 1];
-                  var x = Math.abs(q.x - p.x);
-                  var y = Math.abs(q.y - p.y);
-                  var z = p.distance_to(q);
-                  var d = p.distance_to(prev);
-                  prev = p;
-                  var c = z - d;
-                  arm.points[i] = new Point(p.x + (c / z * y), p.y + (c / z * x));
-              }
-              count++;
+              console.log(count);
+          } else {
           }
-          console.log(count);
-          draw_arm(paper, arm, 'blue');
-      } else {
-      }
+          return arm;
+    }
+    arm = solve(arm, target);
+    draw_arm(paper, arm, 'blue');
+    arm = solve(arm, new Point(80, 20));
+    draw_arm(paper, arm, 'yellow');
+    arm = solve(arm, new Point(80, 10));
+    draw_arm(paper, arm, 'orange');
           
     </script>
   </body>
