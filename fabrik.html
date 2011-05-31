@@ -1,0 +1,163 @@
+<html>
+  <head>
+
+  </head>
+  <body>
+    <div id="test"></div>
+
+    <script src="raphael-min.js"></script>
+    <script>
+      var paper = Raphael(document.getElementById("test"), 200, 200);
+
+      function Point(x, y) {
+          this.x = x;
+          this.y = y;
+      }
+      Point.prototype = {
+          // TEST that this modifies nothing
+          distance_to: function(point) {
+              var x = Math.abs(point.x - this.x);
+              var y = Math.abs(point.y - this.y);
+              return parseInt(Math.sqrt(x*x + y*y));
+          }
+      }
+      
+      function Chain() {
+          this.points = [];
+      }
+      Chain.prototype = {
+          get root() { 
+              if (this.empty)
+                  return false;
+              else
+                  return this.points[0];
+          },
+          set root(point) {
+              if (this.empty)
+                  this.push(point);
+              else
+                  this.points[0] = point;
+          },
+          get end() {
+              if (this.empty)
+                  return false;
+              else
+                  return this.points[this.points.length - 1];
+          },
+          set end(point) {
+              if (this.empty)
+                  this.push(point);
+              else
+                  this.points[this.points.length - 1] = point;
+          },
+          // TEST returns 0 when one or zero points
+          // TEST returns correct length
+          // TEST that this modifies nothing
+          get length() {
+              var len = 0;
+              if (this.points.length < 2) 
+                  return len;
+
+              for (var i = 1; i < this.points.length; i++) {
+                  var prev = this.points[i - 1];
+                  var cur = this.points[i];
+                  len += prev.distance_to(cur);
+              }
+              return len;
+          },
+          get empty() {
+              return this.points.length < 1;
+          },
+          get path() {
+              var path = '';
+              if (this.empty) {
+                  return path;
+              } else {
+                  path += 'M ' + this.root.x + ' ' + this.root.y;
+                  for (var i = 1; i < this.points.length; i++) {
+                      path += ' L ' + this.points[i].x + ' ' + this.points[i].y;
+                  }
+                  return path;
+              }
+          },
+          // TEST that this modifies nothing
+          reachable: function(target) {
+              return this.root.distance_to(target) <= this.length;
+          },
+          push: function(point) {
+              this.points.push(point);
+          },
+      }
+
+      var arm = new Chain();
+      var start = new Point(10, 10);
+      arm.push(start);
+
+      var joints = 3;
+      var seclen = 20;
+      for (var i = 0; i < joints; i++) {
+          var x = arm.end.x + seclen;
+          var y = arm.end.y + seclen;
+          arm.push(new Point(x, y));
+      }
+
+      function draw_arm(paper, arm, color) {
+          for each (var p in arm.points) {
+              var c = paper.circle(p.x, p.y, 2);
+              c.attr({'fill': color});
+          }
+          paper.path(arm.path);
+      }
+      draw_arm(paper, arm, 'green');
+      
+      var target = new Point(80, 30);
+      var c = paper.circle(target.x, target.y, 2);
+      c.attr({'fill': 'red'});
+
+
+      var tolerance = 1;
+
+      // TODO clean this up
+      if (arm.reachable(target)) {
+          var b = arm.root;
+          var count = 0;
+          var thresh = 100;
+
+          while ( (arm.end.distance_to(target) > tolerance) && (count < thresh) ) {
+              var prev = arm.end;
+              arm.end = target;
+              for (var i = arm.points.length - 2; i >= 0; i--) {
+                  var p = arm.points[i];
+                  var q = arm.points[i + 1];
+                  var x = Math.abs(q.x - p.x);
+                  var y = Math.abs(q.y - p.y);
+                  var z = p.distance_to(q);
+                  var d = p.distance_to(prev);
+                  prev = p;
+                  var c = z - d;
+                  arm.points[i] = new Point(p.x + (c / z * y), p.y + (c / z * x));
+              }
+
+              arm.root = b;
+              prev = arm.root;
+              for (var i = 1; i < arm.points.length - 1; i++) {
+                  var p = arm.points[i];
+                  var q = arm.points[i + 1];
+                  var x = Math.abs(q.x - p.x);
+                  var y = Math.abs(q.y - p.y);
+                  var z = p.distance_to(q);
+                  var d = p.distance_to(prev);
+                  prev = p;
+                  var c = z - d;
+                  arm.points[i] = new Point(p.x + (c / z * y), p.y + (c / z * x));
+              }
+              count++;
+          }
+          console.log(count);
+          draw_arm(paper, arm, 'blue');
+      } else {
+      }
+          
+    </script>
+  </body>
+</html>
