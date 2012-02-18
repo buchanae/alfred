@@ -1,26 +1,16 @@
+<!doctype html>
 <html>
   <head>
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+
+    <script data-main="scripts/main" src="scripts/require.js"></script>
 
   </head>
   <body>
-    <div id="test"></div>
-
-    <script src="raphael-min.js"></script>
-    <script>
-      var paper = Raphael(document.getElementById("test"), 200, 200);
-      // head
-      var c = paper.circle(20, 20, 10);
-      // body
-      var b = paper.path("M 20 30 L 20 70");
-      // left leg
-      var ll = paper.path("M 20 70 L 10 90");
-      // right leg
-      var rl = paper.path("M 20 70 L 30 90");
-      // right arm
-      var ra = paper.path("M 20 40 L 40 60");
-      ra.rotate(-50, 20, 40);
-      // left arm
-      var la = paper.path("M 20 40 L 00 60");
-    </script>
+    <canvas id="canvas"></canvas>
   </body>
 </html>
