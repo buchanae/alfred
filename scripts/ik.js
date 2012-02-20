@@ -1,3 +1,4 @@
+// TODO look at using Curve instead of individual Segments
 define(function(){
 
     var ALLOWED_ITERATIONS = 10;
