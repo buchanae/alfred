@@ -34,6 +34,31 @@ define(['domReady', 'ik', 'paper'], function(domReady, ik) {
           if (this.path.end_circle.hitTest( e.point )){
               this.active = true;
           }
+          if (this.active) {
+              this.drawArc();
+              this.drawInnerArc();
+          }
+      };
+      RotateTool.prototype.drawArc = function() {
+          var x = this.ang % 360;
+          var y = this.pt.rotate(x / 2, this.path.center);
+          var z = this.pt.rotate(x, this.path.center);
+
+          this.arc = new paper.Path.Arc(this.pt, y, z);
+          this.arc.strokeColor = 'red';
+          this.arc.dashArray = [1, 2];
+      };
+      RotateTool.prototype.drawInnerArc = function() {
+          if (Math.abs(this.ang) > 360) {
+              this.inner_arc.visible = true;
+              var i = Math.floor(Math.abs(this.ang) / 360);
+              // TODO bug, negative dashArray value causes crash
+              if (i < 7) {
+                  this.inner_arc.dashArray = [i, i];
+              }
+          } else {
+              this.inner_arc.visible = false;
+          }
       };
       RotateTool.prototype.onMouseDrag = function( e ){
 
@@ -49,31 +74,15 @@ define(['domReady', 'ik', 'paper'], function(domReady, ik) {
 
               // this.sucks()
               this.arc.removeSegments();
-
-              var x = this.ang % 360;
-              var y = this.pt.rotate(x / 2, this.path.center);
-              var z = this.pt.rotate(x, this.path.center);
-
-              this.arc = new paper.Path.Arc(this.pt, y, z);
-              this.arc.strokeColor = 'red';
-              this.arc.dashArray = [1, 2];
-
-              if (Math.abs(this.ang) > 360) {
-                  this.inner_arc.visible = true;
-                  var i = Math.floor(Math.abs(this.ang) / 360);
-                  // TODO bug, negative dashArray value causes crash
-                  if (i < 7) {
-                      this.inner_arc.dashArray = [i, i];
-                  }
-              } else {
-                  this.inner_arc.visible = false;
-              }
+              this.drawArc();
+              this.drawInnerArc();
           }
       };
       RotateTool.prototype.onMouseUp = function( e ){
           this.active = false;
           // this.sucks()
           this.arc.removeSegments();
+          this.inner_arc.visible = false;
       };
 
       var Foo = function(center, length) {
@@ -141,7 +150,7 @@ define(['domReady', 'ik', 'paper'], function(domReady, ik) {
       var playing = false;
       var animProgress = 0;
       // need a way to have default length, but adjust when out of room
-      var animLength = 50;
+      var animLength = 200;
       paper.view.onFrame = function() {
 
           if (playing) {
