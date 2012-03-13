@@ -1,65 +1,49 @@
-// TODO look at using Curve instead of individual Segments
-define(function(){
+var ALLOWED_ITERATIONS = 10;
+var TOLERANCE = 0.1;
 
-    var ALLOWED_ITERATIONS = 10;
-    var TOLERANCE = 0.1;
+var ik = function( points, target ){
 
-    return function( path, target ){
+    var lengths = [];
+    var length = 0;
 
-        if ( path.firstSegment.point.getDistance(target) <= path.length ) {
+    for( var i = 0; i < points.length - 1; i++ ){
+        var l = points[ i ].distance( points[ i + 1 ] );
+        length += l;
+        lengths.push( l );
+    }
 
+    var first = points[ 0 ];
+    var last = points[ points.length - 1 ];
+    var root = _.clone( first );
 
-            var iteration = 0;
+    if( root.distance( target ) <= length ){
 
-            // TODO tolerance checking is wrong.  should be checking the amount
-            // that the end point moved during the last iteration.  If it moved
-            // above a tolerance, keep moving.  If it barely moved, it is possible
-            // that the chain is constrained from moving anymore and we should stop.
-            while( !path.lastSegment.point.isClose( target, TOLERANCE )
-                   && iteration < ALLOWED_ITERATIONS ){
+        var count = 0;
+        var dist = last.distance( target );
 
+        while( count < ALLOWED_ITERATIONS && dist > TOLERANCE ){
 
-                var root = path.firstSegment.point.clone();
+            last.move( target );
 
-                var t = target;
-                for( var s = path.lastSegment.previous; s !== null; s = s.previous ){
-
-                    var d = s.point.getDistance(s.next.point);
-                    s.next.point = t;
-                    var a = s.point.subtract(s.next.point).normalize(d);
-                    t = s.next.point.add(a);
-                }
-                path.firstSegment.point = t;
-
-                t = root;
-                path.reverse();
-
-                for( var s = path.lastSegment.previous; s !== null; s = s.previous ){
-
-                    var d = s.point.getDistance(s.next.point);
-                    s.next.point = t;
-                    var a = s.point.subtract(s.next.point).normalize(d);
-                    t = s.next.point.add(a);
-                }
-                path.firstSegment.point = t;
-
-                path.reverse();
-                iteration++;
+            for( var i = points.length - 1; i > 0; i-- ){
+                Segment.setLength( points[ i ], points[ i - 1 ], lengths[ i - 1 ] );
             }
 
-        } else {
-
-            var v = target.subtract(path.firstSegment.point);
-            var t = path.firstSegment.point;
-
-            for( var s = path.firstSegment.next; s !== null; s = s.next ){
-
-                var d = s.point.getDistance(s.previous.point);
-                s.previous.point = t;
-                var a = v.normalize(d);
-                t = s.previous.point.add(a);
+            first.move( root );
+            
+            for( var i = 0; i < points.length - 1; i++ ){
+                Segment.setLength( points[ i ], points[ i + 1 ], lengths[ i ] );
             }
-            path.lastSegment.point = t;
+
+            dist -= last.distance( target ); 
+            count++;
         }
-    };
-});
+
+    } else {
+
+        for( var i = 0; i < points.length - 1; i++ ){
+            points[i + 1].move( target );
+            Segment.setLength( points[i], points[i + 1], lengths[i] );
+        }
+    }
+};
