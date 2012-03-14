@@ -2,9 +2,7 @@ var Path = function( points ){
     this.points = points;
 };
 Path.prototype = {
-    // TODO offset should be percent or length?
-    pointAtOffset : function( offset ){
-        // TODO clean this up.  very inefficient and messy.
+    length : function() {
         var length = 0;
         if( this.points.length > 2) {
             for( var i = 0; i < this.points.length - 1; i++ ){
@@ -13,7 +11,13 @@ Path.prototype = {
         } else {
             length = this.points[0].distance(this.points[1]);
         }
+        return length;
+    },
+    // TODO offset should be percent or length?
+    pointAtOffset : function( offset ){
 
+        var length = this.length();
+        // TODO clean this up.  very inefficient and messy.
         var d = length * offset;
         var prev_len = 0;
         var i = 0;

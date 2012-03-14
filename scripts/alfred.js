@@ -5,56 +5,33 @@ ctx.fillStyle = 'black';
 ctx.strokeStyle = 'black';
 ctx.lineWidth = 3;
 
-var Bounce = function( start, inc, min, max ){
-    this.val = start;
-    this.min = min;
-    this.max = max;
-    this._inc = inc;
-};
-Bounce.prototype = {
-    inc : function(){
-        if( this.val + this._inc < this.min || this.val + this._inc > this.max ){
-            this._inc = this._inc * -1;
-        }
-        this.val += this._inc;
-    }
-};
-
-var Loop = function( start, inc, min, max ){
-    this.val = start;
-    this.min = min;
-    this.max = max;
-    this._inc = inc;
-};
-Loop.prototype = {
-    inc : function() {
-        this.val += this._inc;
-        if( this.val > this.max ){
-            this.val = this.min;
-        }
-    }
-};
 
 var w = canvas.width / 2;
 
-var target = new Point( 5, 5 );
+var END_TIME = 100;
+var bounce_p = new Path([
+    new Point( 0, 0 ),
+    new Point( END_TIME / 2, 1.0 ),
+    new Point( END_TIME, 0 ),
+]);
+
+var loop_p = new Path([
+    new Point( 0, 0 ),
+    new Point( END_TIME, 1.0 ),
+]);
+
 
 var arm_p = new Path([
     new Point( w - 18, 150 ),
     new Point( w + 0, 150 ),
     new Point( w + 28, 142 ),
 ]);
-var larm_offset = new Bounce(0.0, 0.01, 0.0, 1.0);
-var rarm_offset = new Bounce(1.0, 0.01, 0.0, 1.0);
 
 var pts = [];
 for( var i = 0; i < saved.points.length; i++ ){
     pts.push(new Point( saved.points[i].x, saved.points[i].y ));
 }
 var leg_p = new Path( pts );
-
-var lleg_offset = new Loop(0.5, 0.01, 0.0, 1.0);
-var rleg_offset = new Loop(1.0, 0.01, 0.0, 1.0);
 
 var head = new Point( w, 60 );
 var shoulder = new Point( w, 90 );
@@ -65,14 +42,14 @@ var larm = [
 ];
 var rarm = [
     shoulder,
-    new Point( shoulder.x - 30, shoulder.y ),
-    new Point( shoulder.x - 60, shoulder.y )
+    new Point( shoulder.x + 30, shoulder.y ),
+    new Point( shoulder.x + 60, shoulder.y )
 ];
 
 var hip = new Point( w, 150 );
 
 var lleg = [ hip, new Point( hip.x + 30, hip.y ), new Point( hip.x + 60, hip.y ) ];
-var rleg = [ hip, new Point( hip.x - 30, hip.y ), new Point( hip.x - 60, hip.y ) ];
+var rleg = [ hip, new Point( hip.x + 30, hip.y ), new Point( hip.x + 60, hip.y ) ];
 
 function draw_path(p){
     if (p.points.length > 1) {
@@ -86,8 +63,23 @@ function draw_path(p){
 }
 
 var playing = false;
+var time = 0;
+
+var y = loop_p.pointAtOffset( time ).y;
+var target = leg_p.pointAtOffset( y );
+
+var LOOP = true;
 
 AnimationLoop(function( deltaT ) {
+
+    if( time == END_TIME && LOOP ){
+        time = 0;
+    }
+    if( time < END_TIME ){
+        time++;
+    }
+
+    var p = time / END_TIME;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -97,22 +89,20 @@ AnimationLoop(function( deltaT ) {
     draw_path(leg_p);
     ctx.restore();
 
-//    ik( larm, arm_p.pointAtOffset( larm_offset.val ) );
-//    ik( rarm, arm_p.pointAtOffset( rarm_offset.val ) );
-    larm_offset.inc();
-    rarm_offset.inc();
-    lleg_offset.inc();
-    rleg_offset.inc();
-
     if( playing ){
-        ik( lleg, leg_p.pointAtOffset( lleg_offset.val ) );
-        ik( rleg, leg_p.pointAtOffset( rleg_offset.val ) );
+        var y = loop_p.pointAtOffset( p ).y;
+        ik( lleg, leg_p.pointAtOffset( y ) );
+        ik( rleg, leg_p.pointAtOffset( y ) );
     } else {
         ik( rleg, target );
         ik( lleg, target );
     }
 
 /*
+    */
+    var y = bounce_p.pointAtOffset( p ).y;
+    ik( larm, arm_p.pointAtOffset( y ) );
+    ik( rarm, arm_p.pointAtOffset( y ) );
     ctx.beginPath();
     ctx.moveTo(larm[0].x, larm[0].y);
     ctx.lineTo(larm[1].x, larm[1].y);
@@ -124,7 +114,6 @@ AnimationLoop(function( deltaT ) {
     ctx.lineTo(rarm[1].x, rarm[1].y);
     ctx.lineTo(rarm[2].x, rarm[2].y);
     ctx.stroke();
-    */
 
     ctx.beginPath();
     ctx.arc(head.x, head.y, 15, 0, Math.PI * 2);
