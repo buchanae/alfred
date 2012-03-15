@@ -5,6 +5,25 @@ ctx.fillStyle = 'black';
 ctx.strokeStyle = 'black';
 ctx.lineWidth = 3;
 
+var Circle = function( p, r ){
+    this.position = p;
+    this.r = r;
+    this.selected = false;
+};
+Circle.prototype = {
+    draw : function(){
+        ctx.save();
+        ctx.beginPath();
+        if (this.selected){
+            ctx.fillStyle = 'red';
+        }
+        ctx.arc(this.position.x, this.position.y, this.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+};
+
+var hit_targets = [];
 
 var w = canvas.width / 2;
 
@@ -20,7 +39,6 @@ var loop_p = new Path([
     new Point( END_TIME, 1.0 ),
 ]);
 
-
 var arm_p = new Path([
     new Point( w - 18, 150 ),
     new Point( w + 0, 150 ),
@@ -33,7 +51,7 @@ for( var i = 0; i < saved.points.length; i++ ){
 }
 var leg_p = new Path( pts );
 
-var head = new Point( w, 60 );
+var head = new Circle( new Point( w, 60 ), 15 );
 var shoulder = new Point( w, 90 );
 var larm = [ 
     shoulder, 
@@ -66,43 +84,45 @@ var playing = false;
 var time = 0;
 
 var y = loop_p.pointAtOffset( time ).y;
-var target = leg_p.pointAtOffset( y );
+var target = new Circle( leg_p.pointAtOffset( y ), 5 );
+hit_targets.push( target );
+hit_targets.push( head );
 
 var LOOP = true;
 
 AnimationLoop(function( deltaT ) {
 
-    if( time == END_TIME && LOOP ){
-        time = 0;
-    }
-    if( time < END_TIME ){
-        time++;
-    }
-
     var p = time / END_TIME;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.5;
     ctx.strokeStyle = 'red';
     draw_path(arm_p);
     draw_path(leg_p);
     ctx.restore();
 
     if( playing ){
+
+        if( time == END_TIME && LOOP ){
+            time = 0;
+        }
+        if( time < END_TIME ){
+            time++;
+        }
+
         var y = loop_p.pointAtOffset( p ).y;
         ik( lleg, leg_p.pointAtOffset( y ) );
         ik( rleg, leg_p.pointAtOffset( y ) );
+
+        var y = bounce_p.pointAtOffset( p ).y;
+        ik( larm, arm_p.pointAtOffset( y ) );
+        ik( rarm, arm_p.pointAtOffset( y ) );
     } else {
-        ik( rleg, target );
-        ik( lleg, target );
+        ik( rleg, target.position );
+        ik( lleg, target.position );
     }
 
-/*
-    */
-    var y = bounce_p.pointAtOffset( p ).y;
-    ik( larm, arm_p.pointAtOffset( y ) );
-    ik( rarm, arm_p.pointAtOffset( y ) );
     ctx.beginPath();
     ctx.moveTo(larm[0].x, larm[0].y);
     ctx.lineTo(larm[1].x, larm[1].y);
@@ -115,23 +135,16 @@ AnimationLoop(function( deltaT ) {
     ctx.lineTo(rarm[2].x, rarm[2].y);
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.arc(head.x, head.y, 15, 0, Math.PI * 2);
-    ctx.fill();
+    head.draw();
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    target.draw()
 
+    ctx.beginPath();
     ctx.moveTo(canvas.width / 2, 70);
     ctx.lineTo(shoulder.x, shoulder.y);
     ctx.lineTo(hip.x, hip.y);
     ctx.stroke();
 
-/*
-    */
     ctx.beginPath();
     ctx.moveTo(lleg[0].x, lleg[0].y);
     ctx.lineTo(lleg[1].x, lleg[1].y);
@@ -146,12 +159,13 @@ AnimationLoop(function( deltaT ) {
 }, canvas );
 
 document.getElementById('add').addEventListener('click', function(){
-    leg_p.points.push( _.clone( target ) );
+    leg_p.points.push( _.clone( target.position ) );
 });
 document.getElementById('play').addEventListener('click', function(){
     playing = true;
 });
 document.getElementById('stop').addEventListener('click', function(){
+    time = 0;
     playing = false;
 });
 document.getElementById('clear').addEventListener('click', function(){
@@ -159,40 +173,39 @@ document.getElementById('clear').addEventListener('click', function(){
     leg_p.points = [];
 });
 
+var getPos = function( e ){
+    var x;
+    var y;
+    if (e.pageX || e.pageY) { 
+      x = e.pageX;
+      y = e.pageY;
+    }
+    else { 
+      x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+      y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+    } 
+    x -= e.target.offsetLeft;
+    y -= e.target.offsetTop;
+    return new Point( x, y );
+};
+
 var dragging = false;
 document.getElementById('canvas').addEventListener('mousedown', function(e){
     dragging = true;
-    var x;
-    var y;
-    if (e.pageX || e.pageY) { 
-      x = e.pageX;
-      y = e.pageY;
+    var p = getPos( e );
+    for( var i = 0; i < hit_targets.length; i++ ){
+        var t = hit_targets[i];
+        if( p.x >= t.position.x - t.r && p.x <= t.position.x + t.r &&
+            p.y >= t.position.y - t.r && p.y <= t.position.y + t.r ){
+
+            t.selected = true;
+        } else {
+            t.selected = false;
+        }
     }
-    else { 
-      x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
-      y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
-    } 
-    x -= e.target.offsetLeft;
-    y -= e.target.offsetTop;
-    target.x = x;
-    target.y = y;
 });
 document.getElementById('canvas').addEventListener('mousemove', function(e){
   if( dragging ){
-    var x;
-    var y;
-    if (e.pageX || e.pageY) { 
-      x = e.pageX;
-      y = e.pageY;
-    }
-    else { 
-      x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
-      y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
-    } 
-    x -= e.target.offsetLeft;
-    y -= e.target.offsetTop;
-    target.x = x;
-    target.y = y;
   }
 });
 document.getElementById('canvas').addEventListener('mouseup', function(e){
