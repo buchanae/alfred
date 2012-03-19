@@ -5,65 +5,73 @@ ctx.fillStyle = 'black';
 ctx.strokeStyle = 'black';
 ctx.lineWidth = 3;
 
-var hit_targets = [];
-var PLAYBACK_RATE = 0.5;
-
 var w = canvas.width / 2;
 
+var PLAYBACK_RATE = 0.5;
 var END_TIME = 100;
-
-var bounce_p = new Path([
-    new Point( 0, 0 ),
-    new Point( END_TIME / 2, 1.0 ),
-    new Point( END_TIME, 0 ),
-]);
-
-var lbounce_p = new Path([
-    new Point( 0, 1.0 ),
-    new Point( END_TIME / 2, 0.0 ),
-    new Point( END_TIME, 1.0 ),
-]);
-
-var loop_p = new Path([
-    new Point( 0, 0 ),
-    new Point( END_TIME, 1.0 ),
-]);
-
-var lloop_p = new Path([
-    new Point( 0, 0.5 ),
-    new Point( END_TIME / 2, 1.0 ),
-    new Point( END_TIME / 2 + 0.01, 0.0 ),
-    new Point( END_TIME, 0.5 ),
-]);
-
-var paths = [];
-
-if( localStorage.paths != undefined ){
-    var parsed_paths = JSON.parse( localStorage.paths );
-    for( var i = 0; i < parsed_paths.length; i++ ){
-        paths[i] = Path.load( parsed_paths[i] );
-    }
-}
-
-for( var i = 0; i < paths.length; i++ ){
-    for( var j = 0; j < paths[i].points.length; j++ ){
-        hit_targets.push( paths[i].points[j] );
-    }
-}
+var LOOP = true;
+var playing = false;
 
 var alfred = new Alfred( new Point( w, 60 ) );
-
-var playing = false;
 var time = 0;
-
-//hit_targets.push( target );
-hit_targets.push( alfred.head );
-//hit_targets.push( arm_p );
-//hit_targets.push( leg_p );
-
-var LOOP = true;
-
+var scene = [ alfred.lleg, alfred.rleg, alfred.larm, alfred.rarm ];
 var animations = [];
+var paths, hit_targets;
+var saved = {};
+
+var tracks = [
+    new Path([
+        new Point( 0, 0 ),
+        new Point( END_TIME / 2, 1.0 ),
+        new Point( END_TIME, 0 ),
+    ]),
+    new Path([
+        new Point( 0, 1.0 ),
+        new Point( END_TIME / 2, 0.0 ),
+        new Point( END_TIME, 1.0 ),
+    ]),
+    new Path([
+        new Point( 0, 0 ),
+        new Point( END_TIME, 1.0 ),
+    ]),
+    new Path([
+        new Point( 0, 0.5 ),
+        new Point( END_TIME / 2, 1.0 ),
+        new Point( END_TIME / 2 + 0.01, 0.0 ),
+        new Point( END_TIME, 0.5 ),
+    ]),
+];
+
+
+var load_paths = function( p ){
+
+    paths = [];
+    hit_targets = [];
+
+    for( var i = 0; i < p.length; i++ ){
+        paths[i] = load_path( p[i] );
+    }
+
+    for( var i = 0; i < paths.length; i++ ){
+        for( var j = 0; j < paths[i].points.length; j++ ){
+            hit_targets.push( paths[i].points[j] );
+        }
+    }
+};
+
+if( localStorage.paths != undefined ){
+    load_paths( JSON.parse( localStorage.paths ) );
+} else {
+    load_paths( [] );
+}
+
+if( localStorage.animations != undefined ){
+    animations = JSON.parse( localStorage.animations );
+}
+
+if( localStorage.saved != undefined ){
+    saved = JSON.parse( localStorage.saved );
+}
 
 AnimationLoop(function( deltaT ) {
 
@@ -89,8 +97,8 @@ AnimationLoop(function( deltaT ) {
 
         for( var i = 0; i < animations.length; i++ ){
             var anim = animations[i];
-            var y = anim.completion.pointAtOffset( p ).y;
-            ik( anim.target, anim.track.pointAtOffset( y ) );
+            var y = tracks[anim.track].pointAtOffset( p ).y;
+            ik( scene[anim.target], paths[anim.target_path].pointAtOffset( y ) );
         }
     }
 
@@ -130,17 +138,23 @@ var getPos = function( e ){
 };
 
 var dragging = false;
+var new_path_tool_on = false;
 document.getElementById('canvas').addEventListener('mousedown', function(e){
-/*
-    dragging = true;
-    for( var i = 0; i < hit_targets.length; i++ ){
-        var t = hit_targets[i];
-        t.selected = t.hit_test( p );
-    }
-    */
+
     var p = getPos( e );
-    var q = new Point( p.x + 10, p.y + 10 );
-    paths.push( new Path([ p, q ]) );
+    if( new_path_tool_on ){
+        var q = new Point( p.x + 10, p.y + 10 );
+        hit_targets.push( p );
+        hit_targets.push( q );
+        paths.push( new Path([ p, q ]) );
+
+    } else {
+        dragging = true;
+        for( var i = 0; i < hit_targets.length; i++ ){
+            var t = hit_targets[i];
+            t.selected = t.hit_test( p );
+        }
+    }
 
 });
 document.getElementById('canvas').addEventListener('mousemove', function(e){
@@ -155,12 +169,30 @@ document.getElementById('canvas').addEventListener('mousemove', function(e){
   }
   last = p;
 });
+
 document.getElementById('canvas').addEventListener('mouseup', function(e){
     dragging = false;
 });
+
 document.getElementById('now').addEventListener('change', function(){
     PLAYBACK_RATE = parseFloat(this.value);
 });
+
 document.getElementById('save').addEventListener('click', function(){
     localStorage.paths = JSON.stringify(paths);
+    localStorage.animations = JSON.stringify(animations);
 });
+
+document.getElementById('save-as').addEventListener('click', function(){
+    var name = document.getElementById('save-as-name').value;
+    saved[ name ] = { paths: paths, animations: animations };
+    localStorage.saved = JSON.stringify( saved );
+});
+
+var load_saved = function( name ){
+    if( localStorage.saved != undefined ){
+        var parsed = JSON.parse(localStorage.saved);
+        load_paths( parsed[name].paths );
+        animations = parsed[name].animations;
+    }
+};

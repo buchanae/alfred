@@ -60,12 +60,12 @@ Path.prototype = {
             }
         }
     },
-    load : function( data ){
-        var pts = [];
-        for( var i = 0; i < data.points.length; i++ ){
-            pts.push( Point.load( data.points[i] ) );
-        }
-        return new Path( pts );
-    }
-
 };
+
+var load_path = function( data ){
+    var pts = [];
+    for( var i = 0; i < data.points.length; i++ ){
+        pts.push( load_point( data.points[i] ) );
+    }
+    return new Path( pts );
+}

@@ -25,3 +25,7 @@ Point.prototype = {
         return this.distance( p ) < TOLERANCE;
     }
 };
+
+var load_point = function( data ){
+    return new Point( data.x, data.y );
+};
