@@ -37,7 +37,7 @@ Alfred.prototype = {
         ctx.lineTo(this.rarm[2].x, this.rarm[2].y);
         ctx.stroke();
 
-        this.head.draw();
+        this.head.draw( ctx );
 
         ctx.beginPath();
         ctx.moveTo(this.head.position.x, this.head.position.y);

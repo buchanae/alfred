@@ -1,9 +1,21 @@
 var Segment = {
+
     setLength : function( a, b, l ){
-        var d = l / a.distance(b);
-        b.x = a.x + (b.x - a.x) * d;
-        b.y = a.y + (b.y - a.y) * d;
+        if( l == 0 ){
+            b.move( a );
+        } else {
+
+            if( a.equals(b) ){
+                // don't know which direction to add length
+                // TODO throw error?
+            }
+
+            var d = l / a.distance(b);
+            b.x = a.x + (b.x - a.x) * d;
+            b.y = a.y + (b.y - a.y) * d;
+        }
     },
+
     distance : function( a, b, p ){
         // Return minimum distance between line segment vw and point p
         var av = V3.$( a.x, a.y, 0 );

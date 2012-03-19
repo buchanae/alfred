@@ -3,23 +3,29 @@ var Timeline = function(){
     this.tracks = [];
     this.length = 100;
     this.playing = false;
+    this.LOOP = true;
     this.now = 0;
+
+    this.rate = 0.5;
 };
 Timeline.prototype = {
 
-    tick: function( scene ){
+    tick: function(){
 
-        for( var i = 0; i < this.tracks.length; i++ ){
-            this.tracks[i].tick( this );
-        }
+        // TODO playing check belongs inside Timeline?
 
-        if (this.playing) {
+        if( timeline.playing ){
+            this.now += this.rate;
 
-            this.now += 1;
-
-            if (this.now > this.length) {
-              this.playing = false;
+            if( this.now > this.length ){
+                if( this.LOOP ){
+                    this.now = 0;
+                } else {
+                    this.now = this.length;
+                }
             }
+
         }
+
     }
 };

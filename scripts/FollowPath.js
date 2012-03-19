@@ -1,4 +1,4 @@
-var FollowPath = function( path, obj ){
+var FollowPath = function( target, obj ){
     this.path = path;
     this.obj = obj;
 };

@@ -4,7 +4,7 @@ var Circle = function( p, r ){
     this.selected = false;
 };
 Circle.prototype = {
-    draw : function(){
+    draw : function( ctx ){
         ctx.save();
         ctx.beginPath();
         if (this.selected){

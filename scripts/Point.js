@@ -23,6 +23,14 @@ Point.prototype = {
     hit_test : function( p ){
         var TOLERANCE = 2;
         return this.distance( p ) < TOLERANCE;
+    },
+
+    compare : function( other ){
+        return this.x < other.x || ( this.x == other.x && this.y < other.y );
+    },
+
+    equals : function( other ){
+        return this.x == other.x && this.y == other.y;
     }
 };
 
