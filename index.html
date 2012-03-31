@@ -1,33 +1,41 @@
 <!doctype html>
 <html>
   <head>
-    <style>
-      body {
-        margin: 0;
-      }
-    </style>
+    <link rel="stylesheet" href="css/style.css" />
+    <script id="track" type="text/html">
+      <div>{{ name }}</div>
+      <canvas></canvas>
+    </script>
 
   </head>
   <body>
     <div>
-      <button id="add">Add</button>
-      <button id="stop">Stop</button>
-      <button id="play">Play</button>
       <button id="save">Save</button>
-      <input id="now" type="text" value="0" />
       <button id="save-as">Save As</button>
       <input id="save-as-name" type="text" value="" />
     </div>
     <canvas id="canvas" height="400" width="400"></canvas>
+    <div id="player">
+      <div id="player-controls">
+        <button id="add">Add</button>
+        <button id="stop">Stop</button>
+        <button id="play">Play</button>
+      </div>
+      <div id="timeline"></div>
+    </div>
 
     <script src="scripts/mjs.js"></script>
+    <script src="scripts/rAF.js"></script>
+    <script src="scripts/AnimationLoop.js"></script>
+    <script src="scripts/ICanHaz.js"></script>
+    <script src="scripts/zepto.js"></script>
     <script src="scripts/underscore.js"></script>
+    <script src="scripts/backbone.js"></script>
     <script src="scripts/Point.js"></script>
     <script src="scripts/Segment.js"></script>
     <script src="scripts/Path.js"></script>
     <script src="scripts/Circle.js"></script>
     <script src="scripts/ik.js"></script>
-    <script src="scripts/AnimationLoop.js"></script>
     <script src="scripts/Timeline.js"></script>
     <script src="scripts/Alfred.js"></script>
     <script src="scripts/app.js"></script>

@@ -12,9 +12,7 @@ Timeline.prototype = {
 
     tick: function(){
 
-        // TODO playing check belongs inside Timeline?
-
-        if( timeline.playing ){
+        if( this.playing ){
             this.now += this.rate;
 
             if( this.now > this.length ){
@@ -23,6 +21,11 @@ Timeline.prototype = {
                 } else {
                     this.now = this.length;
                 }
+            }
+
+            var p = this.now / this.length;
+            for( var i = 0; i < this.tracks.length; i++ ){
+                this.tracks[i].update( p );
             }
 
         }

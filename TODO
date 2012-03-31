@@ -1,0 +1,24 @@
+save
+
+Circle, Rect, Ellipse, etc
+
+layers, layered hit testing
+
+path editing
+
+timeline player and editor
+    copy (or symbolize) path then shift
+
+joint constraints, or something to make positioning easier
+
+abstract support for json referencing
+
+better paths.  bezeir, etc
+
+playback rate
+
+Symbol + shift
+
+keyboard shortcuts
+
+ability to move hips/body during walk, to follow foot position

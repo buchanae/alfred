@@ -17,5 +17,13 @@ Circle.prototype = {
     hit_test : function( p ){
         return p.x >= this.position.x - this.r && p.x <= this.position.x + this.r &&
                p.y >= this.position.y - this.r && p.y <= this.position.y + this.r;
+    },
+    select_tool : function( p ){
+        this.selected = this.hit_test(p);
+    },
+    drag : function( p ){
+        if( this.selected ){
+            this.position = p;
+        }
     }
 };

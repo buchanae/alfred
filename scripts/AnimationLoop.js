@@ -4,7 +4,7 @@ var AnimationLoop = function( render, element ) {
     function loop( now ) {
         // stop the loop if render returned false
         if ( running !== false ) {
-            mozRequestAnimationFrame( loop, element );
+            requestAnimationFrame( loop, element );
             running = render( now - lastFrame );
             lastFrame = now;
         }

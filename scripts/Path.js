@@ -45,7 +45,6 @@ Path.prototype = {
 
         return t;
     },
-
     hit_test : function( p ){
 
         for( var i = 0; i < this.points.length - 1; i++ ){
@@ -59,7 +58,6 @@ Path.prototype = {
     draw : function( ctx ){
         if (this.points.length > 1) {
             ctx.save();
-            ctx.lineWidth = 0.5;
             ctx.strokeStyle = this.selected ? 'red' : 'black';
             ctx.beginPath();
             ctx.moveTo(this.points[0].x, this.points[0].y);

@@ -1,0 +1,13 @@
+body {
+  margin: 0;
+}
+#timeline {
+  background-color: #ddd;
+}
+.track {
+  padding: 0 10px;
+}
+.track canvas {
+  width: 100%;
+  height: 100px;
+}
